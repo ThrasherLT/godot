@@ -115,19 +115,22 @@ void ColorPicker::_update_controls() {
 
 	if (raw_mode_enabled) {
 		for (int i = 0; i < 3; i++) {
-			scroll[i]->add_theme_icon_override("grabber", Ref<Texture2D>());
-			scroll[i]->add_theme_icon_override("grabber_highlight", Ref<Texture2D>());
-			scroll[i]->add_theme_style_override("slider", Ref<StyleBox>());
-			scroll[i]->add_theme_style_override("grabber_area", Ref<StyleBox>());
-			scroll[i]->add_theme_style_override("grabber_area_highlight", Ref<StyleBox>());
+			scroll[i]->remove_theme_icon_override("grabber");
+			scroll[i]->remove_theme_icon_override("grabber_highlight");
+			scroll[i]->remove_theme_style_override("slider");
+			scroll[i]->remove_theme_style_override("grabber_area");
+			scroll[i]->remove_theme_style_override("grabber_area_highlight");
 		}
 	} else {
-		for (int i = 0; i < 3; i++) {
-			scroll[i]->add_theme_icon_override("grabber", get_theme_icon("bar_arrow"));
-			scroll[i]->add_theme_icon_override("grabber_highlight", get_theme_icon("bar_arrow"));
-			scroll[i]->add_theme_style_override("slider", Ref<StyleBoxEmpty>(memnew(StyleBoxEmpty)));
-			scroll[i]->add_theme_style_override("grabber_area", Ref<StyleBoxEmpty>(memnew(StyleBoxEmpty)));
-			scroll[i]->add_theme_style_override("grabber_area_highlight", Ref<StyleBoxEmpty>(memnew(StyleBoxEmpty)));
+		Ref<StyleBoxEmpty> style_box_empty(memnew(StyleBoxEmpty));
+		Ref<Texture2D> bar_arrow = get_theme_icon("bar_arrow");
+
+		for (int i = 0; i < 4; i++) {
+			scroll[i]->add_theme_icon_override("grabber", bar_arrow);
+			scroll[i]->add_theme_icon_override("grabber_highlight", bar_arrow);
+			scroll[i]->add_theme_style_override("slider", style_box_empty);
+			scroll[i]->add_theme_style_override("grabber_area", style_box_empty);
+			scroll[i]->add_theme_style_override("grabber_area_highlight", style_box_empty);
 		}
 	}
 
@@ -847,7 +850,7 @@ ColorPicker::ColorPicker() :
 	btn_pick->set_flat(true);
 	hb_smpl->add_child(btn_pick);
 	btn_pick->set_toggle_mode(true);
-	btn_pick->set_tooltip(TTR("Pick a color from the editor window."));
+	btn_pick->set_tooltip(RTR("Pick a color from the editor window."));
 	btn_pick->connect("pressed", callable_mp(this, &ColorPicker::_screen_pick_pressed));
 
 	VBoxContainer *vbl = memnew(VBoxContainer);
@@ -887,24 +890,20 @@ ColorPicker::ColorPicker() :
 
 		vbr->add_child(hbc);
 	}
+
 	labels[3]->set_text("A");
-	scroll[3]->add_theme_icon_override("grabber", get_theme_icon("bar_arrow"));
-	scroll[3]->add_theme_icon_override("grabber_highlight", get_theme_icon("bar_arrow"));
-	scroll[3]->add_theme_style_override("slider", Ref<StyleBoxEmpty>(memnew(StyleBoxEmpty)));
-	scroll[3]->add_theme_style_override("grabber_area", Ref<StyleBoxEmpty>(memnew(StyleBoxEmpty)));
-	scroll[3]->add_theme_style_override("grabber_area_highlight", Ref<StyleBoxEmpty>(memnew(StyleBoxEmpty)));
 
 	HBoxContainer *hhb = memnew(HBoxContainer);
 	vbr->add_child(hhb);
 
 	btn_hsv = memnew(CheckButton);
 	hhb->add_child(btn_hsv);
-	btn_hsv->set_text(TTR("HSV"));
+	btn_hsv->set_text(RTR("HSV"));
 	btn_hsv->connect("toggled", callable_mp(this, &ColorPicker::set_hsv_mode));
 
 	btn_raw = memnew(CheckButton);
 	hhb->add_child(btn_raw);
-	btn_raw->set_text(TTR("Raw"));
+	btn_raw->set_text(RTR("Raw"));
 	btn_raw->connect("toggled", callable_mp(this, &ColorPicker::set_raw_mode));
 
 	text_type = memnew(Button);
@@ -950,7 +949,7 @@ ColorPicker::ColorPicker() :
 	add_child(preset_container2);
 	bt_add_preset = memnew(Button);
 	preset_container2->add_child(bt_add_preset);
-	bt_add_preset->set_tooltip(TTR("Add current color as a preset."));
+	bt_add_preset->set_tooltip(RTR("Add current color as a preset."));
 	bt_add_preset->connect("pressed", callable_mp(this, &ColorPicker::_add_preset_pressed));
 }
 
