@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<class name="Control" inherits="CanvasItem" version="3.3">
+<class name="Control" inherits="CanvasItem" version="3.4">
 	<brief_description>
 		All user interface nodes inherit from Control. A control's anchors and margins adapt its position and size relative to its parent.
 	</brief_description>
@@ -16,7 +16,7 @@
 	<tutorials>
 		<link title="GUI tutorial index">https://docs.godotengine.org/en/3.3/tutorials/gui/index.html</link>
 		<link title="Custom drawing in 2D">https://docs.godotengine.org/en/3.3/tutorials/2d/custom_drawing_in_2d.html</link>
-		<link title="Control node gallery">https://docs.godotengine.org/en/latest/tutorials/ui/control_node_gallery.html</link>
+		<link title="Control node gallery">https://docs.godotengine.org/en/3.3/tutorials/gui/control_node_gallery.html</link>
 		<link title="All GUI Demos">https://github.com/godotengine/godot-demo-projects/tree/master/gui</link>
 	</tutorials>
 	<methods>

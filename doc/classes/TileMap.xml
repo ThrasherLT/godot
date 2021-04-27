@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<class name="TileMap" inherits="Node2D" version="3.3">
+<class name="TileMap" inherits="Node2D" version="3.4">
 	<brief_description>
 		Node for 2D tile-based maps.
 	</brief_description>
@@ -178,7 +178,7 @@
 				If you need these to be immediately updated, you can call [method update_dirty_quadrants].
 				Overriding this method also overrides it internally, allowing custom logic to be implemented when tiles are placed/removed:
 				[codeblock]
-				func set_cell(x, y, tile, flip_x=false, flip_y=false, transpose=false, autotile_coord=Vector2())
+				func set_cell(x, y, tile, flip_x=false, flip_y=false, transpose=false, autotile_coord=Vector2()):
 				    # Write your custom logic here.
 				    # To call the default method:
 				    .set_cell(x, y, tile, flip_x, flip_y, transpose, autotile_coord)
