@@ -375,8 +375,8 @@ void Main::print_help(const char *p_binary) {
 #ifdef TESTS_ENABLED
 	OS::get_singleton()->print("  --test [--help]                              Run unit tests. Use --test --help for more information.\n");
 #endif
-	OS::get_singleton()->print("\n");
 #endif
+	OS::get_singleton()->print("\n");
 }
 
 #ifdef TESTS_ENABLED
@@ -389,6 +389,8 @@ Error Main::test_setup() {
 
 	register_core_types();
 	register_core_driver_types();
+
+	packed_data = memnew(PackedData);
 
 	globals = memnew(ProjectSettings);
 
@@ -458,6 +460,9 @@ void Main::test_cleanup() {
 	}
 	if (globals) {
 		memdelete(globals);
+	}
+	if (packed_data) {
+		memdelete(packed_data);
 	}
 	if (engine) {
 		memdelete(engine);
@@ -1248,6 +1253,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 	}
 
 	GLOBAL_DEF("internationalization/rendering/force_right_to_left_layout_direction", false);
+	GLOBAL_DEF("internationalization/locale/include_text_server_data", false);
 
 	if (!force_lowdpi) {
 		OS::get_singleton()->_allow_hidpi = GLOBAL_DEF("display/window/dpi/allow_hidpi", false);

@@ -811,6 +811,7 @@ GDScriptParser::VariableNode *GDScriptParser::parse_variable(bool p_allow_proper
 
 	VariableNode *variable = alloc_node<VariableNode>();
 	variable->identifier = parse_identifier();
+	variable->export_info.name = variable->identifier->name;
 
 	if (match(GDScriptTokenizer::Token::COLON)) {
 		if (check(GDScriptTokenizer::Token::NEWLINE)) {
@@ -859,8 +860,6 @@ GDScriptParser::VariableNode *GDScriptParser::parse_variable(bool p_allow_proper
 	}
 
 	end_statement("variable declaration");
-
-	variable->export_info.name = variable->identifier->name;
 
 	return variable;
 }
@@ -2441,6 +2440,8 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_dictionary(ExpressionNode 
 							push_error(R"(Expected "=" after dictionary key.)");
 						}
 					}
+					key->is_constant = true;
+					key->reduced_value = static_cast<IdentifierNode *>(key)->name;
 					break;
 				case DictionaryNode::PYTHON_DICT:
 					if (!match(GDScriptTokenizer::Token::COLON)) {
