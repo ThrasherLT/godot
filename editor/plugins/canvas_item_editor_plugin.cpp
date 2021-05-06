@@ -1654,7 +1654,7 @@ bool CanvasItemEditor::_gui_input_open_scene_on_double_click(const Ref<InputEven
 	Ref<InputEventMouseButton> b = p_event;
 
 	// Open a sub-scene on double-click
-	if (b.is_valid() && b->get_button_index() == MOUSE_BUTTON_LEFT && b->is_pressed() && b->is_doubleclick() && tool == TOOL_SELECT) {
+	if (b.is_valid() && b->get_button_index() == MOUSE_BUTTON_LEFT && b->is_pressed() && b->is_double_click() && tool == TOOL_SELECT) {
 		List<CanvasItem *> selection = _get_edited_canvas_items();
 		if (selection.size() == 1) {
 			CanvasItem *canvas_item = selection[0];
@@ -5853,6 +5853,13 @@ CanvasItemEditor::CanvasItemEditor(EditorNode *p_editor) {
 
 	updating_scroll = false;
 
+	// Add some margin to the left for better aesthetics.
+	// This prevents the first button's hover/pressed effect from "touching" the panel's border,
+	// which looks ugly.
+	Control *margin_left = memnew(Control);
+	hb->add_child(margin_left);
+	margin_left->set_custom_minimum_size(Size2(2, 0) * EDSCALE);
+
 	select_button = memnew(Button);
 	select_button->set_flat(true);
 	hb->add_child(select_button);
@@ -6089,7 +6096,6 @@ CanvasItemEditor::CanvasItemEditor(EditorNode *p_editor) {
 
 	key_loc_button = memnew(Button);
 	key_loc_button->set_toggle_mode(true);
-	key_loc_button->set_flat(true);
 	key_loc_button->set_pressed(true);
 	key_loc_button->set_focus_mode(FOCUS_NONE);
 	key_loc_button->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback), varray(ANIM_INSERT_POS));
@@ -6098,7 +6104,6 @@ CanvasItemEditor::CanvasItemEditor(EditorNode *p_editor) {
 
 	key_rot_button = memnew(Button);
 	key_rot_button->set_toggle_mode(true);
-	key_rot_button->set_flat(true);
 	key_rot_button->set_pressed(true);
 	key_rot_button->set_focus_mode(FOCUS_NONE);
 	key_rot_button->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback), varray(ANIM_INSERT_ROT));
@@ -6107,14 +6112,12 @@ CanvasItemEditor::CanvasItemEditor(EditorNode *p_editor) {
 
 	key_scale_button = memnew(Button);
 	key_scale_button->set_toggle_mode(true);
-	key_scale_button->set_flat(true);
 	key_scale_button->set_focus_mode(FOCUS_NONE);
 	key_scale_button->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback), varray(ANIM_INSERT_SCALE));
 	key_scale_button->set_tooltip(TTR("Scale mask for inserting keys."));
 	animation_hb->add_child(key_scale_button);
 
 	key_insert_button = memnew(Button);
-	key_insert_button->set_flat(true);
 	key_insert_button->set_focus_mode(FOCUS_NONE);
 	key_insert_button->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback), varray(ANIM_INSERT_KEY));
 	key_insert_button->set_tooltip(TTR("Insert keys (based on mask)."));
@@ -6518,8 +6521,7 @@ bool CanvasItemEditorViewport::can_drop_data(const Point2 &p_point, const Varian
 						   type == "CurveTexture" ||
 						   type == "GradientTexture" ||
 						   type == "StreamTexture2D" ||
-						   type == "AtlasTexture" ||
-						   type == "LargeTexture") {
+						   type == "AtlasTexture") {
 					Ref<Texture2D> texture = Ref<Texture2D>(Object::cast_to<Texture2D>(*res));
 					if (!texture.is_valid()) {
 						continue;

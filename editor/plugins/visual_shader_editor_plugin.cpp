@@ -736,6 +736,7 @@ void VisualShaderGraphPlugin::add_node(VisualShader::Type p_type, int p_id) {
 		Color background_color = EDITOR_GET("text_editor/highlighting/background_color");
 		Color text_color = EDITOR_GET("text_editor/highlighting/text_color");
 		Color keyword_color = EDITOR_GET("text_editor/highlighting/keyword_color");
+		Color control_flow_keyword_color = EDITOR_GET("text_editor/highlighting/control_flow_keyword_color");
 		Color comment_color = EDITOR_GET("text_editor/highlighting/comment_color");
 		Color symbol_color = EDITOR_GET("text_editor/highlighting/symbol_color");
 		Color function_color = EDITOR_GET("text_editor/highlighting/function_color");
@@ -746,7 +747,11 @@ void VisualShaderGraphPlugin::add_node(VisualShader::Type p_type, int p_id) {
 		expression_box->add_theme_color_override("background_color", background_color);
 
 		for (List<String>::Element *E = VisualShaderEditor::get_singleton()->keyword_list.front(); E; E = E->next()) {
-			expression_syntax_highlighter->add_keyword_color(E->get(), keyword_color);
+			if (ShaderLanguage::is_control_flow_keyword(E->get())) {
+				expression_syntax_highlighter->add_keyword_color(E->get(), control_flow_keyword_color);
+			} else {
+				expression_syntax_highlighter->add_keyword_color(E->get(), keyword_color);
+			}
 		}
 
 		expression_box->add_theme_font_override("font", VisualShaderEditor::get_singleton()->get_theme_font("expression", "EditorFonts"));
@@ -1175,26 +1180,15 @@ void VisualShaderEditor::_draw_color_over_button(Object *obj, Color p_color) {
 }
 
 void VisualShaderEditor::_update_created_node(GraphNode *node) {
-	if (EditorSettings::get_singleton()->get("interface/theme/use_graph_node_headers")) {
-		Ref<StyleBoxFlat> sb = node->get_theme_stylebox("frame", "GraphNode");
-		Color c = sb->get_border_color();
-		Color ic;
-		Color mono_color;
-		if (((c.r + c.g + c.b) / 3) < 0.7) {
-			mono_color = Color(1.0, 1.0, 1.0);
-			ic = Color(0.0, 0.0, 0.0, 0.7);
-		} else {
-			mono_color = Color(0.0, 0.0, 0.0);
-			ic = Color(1.0, 1.0, 1.0, 0.7);
-		}
-		mono_color.a = 0.85;
-		c = mono_color;
+	const Ref<StyleBoxFlat> sb = node->get_theme_stylebox("frame", "GraphNode");
+	Color c = sb->get_border_color();
+	const Color mono_color = ((c.r + c.g + c.b) / 3) < 0.7 ? Color(1.0, 1.0, 1.0, 0.85) : Color(0.0, 0.0, 0.0, 0.85);
+	c = mono_color;
 
-		node->add_theme_color_override("title_color", c);
-		c.a = 0.7;
-		node->add_theme_color_override("close_color", c);
-		node->add_theme_color_override("resizer_color", ic);
-	}
+	node->add_theme_color_override("title_color", c);
+	c.a = 0.7;
+	node->add_theme_color_override("close_color", c);
+	node->add_theme_color_override("resizer_color", c);
 }
 
 void VisualShaderEditor::_update_uniforms(bool p_update_refs) {
@@ -2803,6 +2797,7 @@ void VisualShaderEditor::_notification(int p_what) {
 			Color background_color = EDITOR_GET("text_editor/highlighting/background_color");
 			Color text_color = EDITOR_GET("text_editor/highlighting/text_color");
 			Color keyword_color = EDITOR_GET("text_editor/highlighting/keyword_color");
+			Color control_flow_keyword_color = EDITOR_GET("text_editor/highlighting/control_flow_keyword_color");
 			Color comment_color = EDITOR_GET("text_editor/highlighting/comment_color");
 			Color symbol_color = EDITOR_GET("text_editor/highlighting/symbol_color");
 			Color function_color = EDITOR_GET("text_editor/highlighting/function_color");
@@ -2812,7 +2807,11 @@ void VisualShaderEditor::_notification(int p_what) {
 			preview_text->add_theme_color_override("background_color", background_color);
 
 			for (List<String>::Element *E = keyword_list.front(); E; E = E->next()) {
-				syntax_highlighter->add_keyword_color(E->get(), keyword_color);
+				if (ShaderLanguage::is_control_flow_keyword(E->get())) {
+					syntax_highlighter->add_keyword_color(E->get(), control_flow_keyword_color);
+				} else {
+					syntax_highlighter->add_keyword_color(E->get(), keyword_color);
+				}
 			}
 
 			preview_text->add_theme_font_override("font", get_theme_font("expression", "EditorFonts"));

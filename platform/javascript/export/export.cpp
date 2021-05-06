@@ -41,7 +41,7 @@
 
 class EditorHTTPServer : public Reference {
 private:
-	Ref<TCP_Server> server;
+	Ref<TCPServer> server;
 	Map<String, String> mimes;
 	Ref<StreamPeerTCP> tcp;
 	Ref<StreamPeerSSL> ssl;
@@ -100,7 +100,7 @@ public:
 		_clear_client();
 	}
 
-	Error listen(int p_port, IP_Address p_address, bool p_use_ssl, String p_ssl_key, String p_ssl_cert) {
+	Error listen(int p_port, IPAddress p_address, bool p_use_ssl, String p_ssl_key, String p_ssl_cert) {
 		use_ssl = p_use_ssl;
 		if (use_ssl) {
 			Ref<Crypto> crypto = Crypto::create();
@@ -353,7 +353,7 @@ public:
 };
 
 Error EditorExportPlatformJavaScript::_extract_template(const String &p_template, const String &p_dir, const String &p_name, bool pwa) {
-	FileAccess *src_f = NULL;
+	FileAccess *src_f = nullptr;
 	zlib_filefunc_def io = zipio_create_io_from_file(&src_f);
 	unzFile pkg = unzOpen2(p_template.utf8().get_data(), &io);
 
@@ -372,7 +372,7 @@ Error EditorExportPlatformJavaScript::_extract_template(const String &p_template
 		//get filename
 		unz_file_info info;
 		char fname[16384];
-		unzGetCurrentFileInfo(pkg, &info, fname, 16384, NULL, 0, NULL, 0);
+		unzGetCurrentFileInfo(pkg, &info, fname, 16384, nullptr, 0, nullptr, 0);
 
 		String file = fname;
 
@@ -919,7 +919,7 @@ Error EditorExportPlatformJavaScript::run(const Ref<EditorExportPreset> &p_prese
 	const uint16_t bind_port = EDITOR_GET("export/web/http_port");
 	// Resolve host if needed.
 	const String bind_host = EDITOR_GET("export/web/http_host");
-	IP_Address bind_ip;
+	IPAddress bind_ip;
 	if (bind_host.is_valid_ip_address()) {
 		bind_ip = bind_host;
 	} else {

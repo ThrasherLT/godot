@@ -1250,6 +1250,7 @@ void TileMap::set_collision_mask(uint32_t p_mask) {
 }
 
 void TileMap::set_collision_layer_bit(int p_bit, bool p_value) {
+	ERR_FAIL_INDEX_MSG(p_bit, 32, "Collision layer bit must be between 0 and 31 inclusive.");
 	uint32_t layer = get_collision_layer();
 	if (p_value) {
 		layer |= 1 << p_bit;
@@ -1260,6 +1261,7 @@ void TileMap::set_collision_layer_bit(int p_bit, bool p_value) {
 }
 
 void TileMap::set_collision_mask_bit(int p_bit, bool p_value) {
+	ERR_FAIL_INDEX_MSG(p_bit, 32, "Collision mask bit must be between 0 and 31 inclusive.");
 	uint32_t mask = get_collision_mask();
 	if (p_value) {
 		mask |= 1 << p_bit;
@@ -1352,10 +1354,12 @@ uint32_t TileMap::get_collision_mask() const {
 }
 
 bool TileMap::get_collision_layer_bit(int p_bit) const {
+	ERR_FAIL_INDEX_V_MSG(p_bit, 32, false, "Collision layer bit must be between 0 and 31 inclusive.");
 	return get_collision_layer() & (1 << p_bit);
 }
 
 bool TileMap::get_collision_mask_bit(int p_bit) const {
+	ERR_FAIL_INDEX_V_MSG(p_bit, 32, false, "Collision mask bit must be between 0 and 31 inclusive.");
 	return get_collision_mask() & (1 << p_bit);
 }
 
@@ -1522,6 +1526,12 @@ Vector2 TileMap::map_to_world(const Vector2 &p_pos, bool p_ignore_ofs) const {
 Vector2 TileMap::world_to_map(const Vector2 &p_pos) const {
 	Vector2 ret = get_cell_transform().affine_inverse().xform(p_pos);
 
+	// Account for precision errors on the border (GH-23250).
+	// 0.00005 is 5*CMP_EPSILON, results would start being unpredictable if
+	// cell size is > 15,000, but we can hardly have more precision anyway with
+	// floating point.
+	ret += Vector2(0.00005, 0.00005);
+
 	switch (half_offset) {
 		case HALF_OFFSET_X: {
 			if (int(floor(ret.y)) & 1) {
@@ -1548,11 +1558,6 @@ Vector2 TileMap::world_to_map(const Vector2 &p_pos) const {
 		}
 	}
 
-	// Account for precision errors on the border (GH-23250).
-	// 0.00005 is 5*CMP_EPSILON, results would start being unpredictable if
-	// cell size is > 15,000, but we can hardly have more precision anyway with
-	// floating point.
-	ret += Vector2(0.00005, 0.00005);
 	return ret.floor();
 }
 

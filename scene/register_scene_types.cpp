@@ -689,6 +689,8 @@ void register_scene_types() {
 	ClassDB::register_class<PrismMesh>();
 	ClassDB::register_class<QuadMesh>();
 	ClassDB::register_class<SphereMesh>();
+	ClassDB::register_class<TubeTrailMesh>();
+	ClassDB::register_class<RibbonTrailMesh>();
 	ClassDB::register_class<PointMesh>();
 	ClassDB::register_virtual_class<Material>();
 	ClassDB::register_virtual_class<BaseMaterial3D>();
@@ -729,7 +731,6 @@ void register_scene_types() {
 	ClassDB::register_class<ImageTexture>();
 	ClassDB::register_class<AtlasTexture>();
 	ClassDB::register_class<MeshTexture>();
-	ClassDB::register_class<LargeTexture>();
 	ClassDB::register_class<CurveTexture>();
 	ClassDB::register_class<GradientTexture>();
 	ClassDB::register_class<ProxyTexture>();

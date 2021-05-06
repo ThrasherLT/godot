@@ -1388,7 +1388,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 				}
 			}
 
-			if ((select_mode == SELECT_ROW && selected_item == p_item) || p_item->cells[i].selected) {
+			if ((select_mode == SELECT_ROW && selected_item == p_item) || p_item->cells[i].selected || !p_item->has_meta("__focus_rect")) {
 				Rect2i r(cell_rect.position, cell_rect.size);
 
 				p_item->set_meta("__focus_rect", Rect2(r.position, r.size));
@@ -1672,7 +1672,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 
 				float line_width = 1.0;
 #ifdef TOOLS_ENABLED
-				line_width *= EDSCALE;
+				line_width *= Math::round(EDSCALE);
 #endif
 
 				Point2i parent_pos = Point2i(parent_ofs - cache.arrow->get_width() / 2, p_pos.y + label_h / 2 + cache.arrow->get_height() / 2) - cache.offset + p_draw_ofs;
@@ -1866,7 +1866,7 @@ void Tree::_range_click_timeout() {
 	}
 }
 
-int Tree::propagate_mouse_event(const Point2i &p_pos, int x_ofs, int y_ofs, bool p_doubleclick, TreeItem *p_item, int p_button, const Ref<InputEventWithModifiers> &p_mod) {
+int Tree::propagate_mouse_event(const Point2i &p_pos, int x_ofs, int y_ofs, bool p_double_click, TreeItem *p_item, int p_button, const Ref<InputEventWithModifiers> &p_mod) {
 	int item_h = compute_item_height(p_item) + cache.vseparation;
 
 	bool skip = (p_item == root && hide_root);
@@ -1963,7 +1963,7 @@ int Tree::propagate_mouse_event(const Point2i &p_pos, int x_ofs, int y_ofs, bool
 		if (p_button == MOUSE_BUTTON_LEFT || (p_button == MOUSE_BUTTON_RIGHT && allow_rmb_select)) {
 			/* process selection */
 
-			if (p_doubleclick && (!c.editable || c.mode == TreeItem::CELL_MODE_CUSTOM || c.mode == TreeItem::CELL_MODE_ICON /*|| c.mode==TreeItem::CELL_MODE_CHECK*/)) { //it's confusing for check
+			if (p_double_click && (!c.editable || c.mode == TreeItem::CELL_MODE_CUSTOM || c.mode == TreeItem::CELL_MODE_ICON /*|| c.mode==TreeItem::CELL_MODE_CHECK*/)) { //it's confusing for check
 
 				propagate_mouse_activated = true;
 
@@ -2167,7 +2167,7 @@ int Tree::propagate_mouse_event(const Point2i &p_pos, int x_ofs, int y_ofs, bool
 			TreeItem *c = p_item->children;
 
 			while (c) {
-				int child_h = propagate_mouse_event(new_pos, x_ofs, y_ofs, p_doubleclick, c, p_button, p_mod);
+				int child_h = propagate_mouse_event(new_pos, x_ofs, y_ofs, p_double_click, c, p_button, p_mod);
 
 				if (child_h < 0) {
 					return -1; // break, stop propagating, no need to anymore
@@ -2846,7 +2846,7 @@ void Tree::_gui_input(Ref<InputEvent> p_event) {
 				propagate_mouse_activated = false;
 
 				blocked++;
-				propagate_mouse_event(pos + cache.offset, 0, 0, b->is_doubleclick(), root, b->get_button_index(), b);
+				propagate_mouse_event(pos + cache.offset, 0, 0, b->is_double_click(), root, b->get_button_index(), b);
 				blocked--;
 
 				if (pressing_for_editor) {
@@ -3011,6 +3011,10 @@ bool Tree::edit_selected() {
 	}
 
 	return false;
+}
+
+bool Tree::is_editing() {
+	return popup_editor->is_visible();
 }
 
 Size2 Tree::get_internal_min_size() const {
@@ -4262,7 +4266,7 @@ void Tree::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("item_custom_button_pressed"));
 	ADD_SIGNAL(MethodInfo("item_double_clicked"));
 	ADD_SIGNAL(MethodInfo("item_collapsed", PropertyInfo(Variant::OBJECT, "item", PROPERTY_HINT_RESOURCE_TYPE, "TreeItem")));
-	//ADD_SIGNAL( MethodInfo("item_doubleclicked" ) );
+	//ADD_SIGNAL( MethodInfo("item_double_clicked" ) );
 	ADD_SIGNAL(MethodInfo("button_pressed", PropertyInfo(Variant::OBJECT, "item", PROPERTY_HINT_RESOURCE_TYPE, "TreeItem"), PropertyInfo(Variant::INT, "column"), PropertyInfo(Variant::INT, "id")));
 	ADD_SIGNAL(MethodInfo("custom_popup_edited", PropertyInfo(Variant::BOOL, "arrow_clicked")));
 	ADD_SIGNAL(MethodInfo("item_activated"));

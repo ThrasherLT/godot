@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  copymem.h                                                            */
+/*  gdscript_lambda_callable.cpp                                         */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,23 +28,68 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#ifndef COPYMEM_H
-#define COPYMEM_H
+#include "gdscript_lambda_callable.h"
 
-#include "core/typedefs.h"
+#include "core/templates/hashfuncs.h"
+#include "gdscript.h"
 
-#ifdef PLATFORM_COPYMEM
+bool GDScriptLambdaCallable::compare_equal(const CallableCustom *p_a, const CallableCustom *p_b) {
+	// Lambda callables are only compared by reference.
+	return p_a == p_b;
+}
 
-#include "platform_copymem.h" // included from platform/<current_platform>/platform_copymem.h"
+bool GDScriptLambdaCallable::compare_less(const CallableCustom *p_a, const CallableCustom *p_b) {
+	// Lambda callables are only compared by reference.
+	return p_a < p_b;
+}
 
-#else
+uint32_t GDScriptLambdaCallable::hash() const {
+	return h;
+}
 
-#include <string.h>
+String GDScriptLambdaCallable::get_as_text() const {
+	if (function->get_name() != StringName()) {
+		return function->get_name().operator String() + "(lambda)";
+	}
+	return "(anonymous lambda)";
+}
 
-#define copymem(to, from, count) memcpy(to, from, count)
-#define zeromem(to, count) memset(to, 0, count)
-#define movemem(to, from, count) memmove(to, from, count)
+CallableCustom::CompareEqualFunc GDScriptLambdaCallable::get_compare_equal_func() const {
+	return compare_equal;
+}
 
-#endif
+CallableCustom::CompareLessFunc GDScriptLambdaCallable::get_compare_less_func() const {
+	return compare_less;
+}
 
-#endif // COPYMEM_H
+ObjectID GDScriptLambdaCallable::get_object() const {
+	return script->get_instance_id();
+}
+
+void GDScriptLambdaCallable::call(const Variant **p_arguments, int p_argcount, Variant &r_return_value, Callable::CallError &r_call_error) const {
+	int captures_amount = captures.size();
+
+	if (captures_amount > 0) {
+		Vector<const Variant *> args;
+		args.resize(p_argcount + captures_amount);
+		for (int i = 0; i < captures_amount; i++) {
+			args.write[i] = &captures[i];
+		}
+		for (int i = 0; i < p_argcount; i++) {
+			args.write[i + captures_amount] = p_arguments[i];
+		}
+
+		r_return_value = function->call(nullptr, args.ptrw(), args.size(), r_call_error);
+		r_call_error.argument -= captures_amount;
+	} else {
+		r_return_value = function->call(nullptr, p_arguments, p_argcount, r_call_error);
+	}
+}
+
+GDScriptLambdaCallable::GDScriptLambdaCallable(Ref<GDScript> p_script, GDScriptFunction *p_function, const Vector<Variant> &p_captures) {
+	script = p_script;
+	function = p_function;
+	captures = p_captures;
+
+	h = (uint32_t)hash_djb2_one_64((uint64_t)this);
+}

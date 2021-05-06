@@ -95,7 +95,7 @@
 
 #endif
 
-size_t NetSocketPosix::_set_addr_storage(struct sockaddr_storage *p_addr, const IP_Address &p_ip, uint16_t p_port, IP::Type p_ip_type) {
+size_t NetSocketPosix::_set_addr_storage(struct sockaddr_storage *p_addr, const IPAddress &p_ip, uint16_t p_port, IP::Type p_ip_type) {
 	memset(p_addr, 0, sizeof(struct sockaddr_storage));
 	if (p_ip_type == IP::TYPE_IPV6 || p_ip_type == IP::TYPE_ANY) { // IPv6 socket
 
@@ -106,7 +106,7 @@ size_t NetSocketPosix::_set_addr_storage(struct sockaddr_storage *p_addr, const 
 		addr6->sin6_family = AF_INET6;
 		addr6->sin6_port = htons(p_port);
 		if (p_ip.is_valid()) {
-			copymem(&addr6->sin6_addr.s6_addr, p_ip.get_ipv6(), 16);
+			memcpy(&addr6->sin6_addr.s6_addr, p_ip.get_ipv6(), 16);
 		} else {
 			addr6->sin6_addr = in6addr_any;
 		}
@@ -121,7 +121,7 @@ size_t NetSocketPosix::_set_addr_storage(struct sockaddr_storage *p_addr, const 
 		addr4->sin_port = htons(p_port); // short, network byte order
 
 		if (p_ip.is_valid()) {
-			copymem(&addr4->sin_addr.s_addr, p_ip.get_ipv4(), 4);
+			memcpy(&addr4->sin_addr.s_addr, p_ip.get_ipv4(), 4);
 		} else {
 			addr4->sin_addr.s_addr = INADDR_ANY;
 		}
@@ -130,7 +130,7 @@ size_t NetSocketPosix::_set_addr_storage(struct sockaddr_storage *p_addr, const 
 	}
 }
 
-void NetSocketPosix::_set_ip_port(struct sockaddr_storage *p_addr, IP_Address *r_ip, uint16_t *r_port) {
+void NetSocketPosix::_set_ip_port(struct sockaddr_storage *p_addr, IPAddress *r_ip, uint16_t *r_port) {
 	if (p_addr->ss_family == AF_INET) {
 		struct sockaddr_in *addr4 = (struct sockaddr_in *)p_addr;
 		if (r_ip) {
@@ -233,7 +233,7 @@ NetSocketPosix::NetError NetSocketPosix::_get_socket_error() const {
 #pragma GCC diagnostic pop
 #endif
 
-bool NetSocketPosix::_can_use_ip(const IP_Address &p_ip, const bool p_for_bind) const {
+bool NetSocketPosix::_can_use_ip(const IPAddress &p_ip, const bool p_for_bind) const {
 	if (p_for_bind && !(p_ip.is_valid() || p_ip.is_wildcard())) {
 		return false;
 	} else if (!p_for_bind && !p_ip.is_valid()) {
@@ -244,7 +244,7 @@ bool NetSocketPosix::_can_use_ip(const IP_Address &p_ip, const bool p_for_bind) 
 	return !(_ip_type != IP::TYPE_ANY && !p_ip.is_wildcard() && _ip_type != type);
 }
 
-_FORCE_INLINE_ Error NetSocketPosix::_change_multicast_group(IP_Address p_ip, String p_if_name, bool p_add) {
+_FORCE_INLINE_ Error NetSocketPosix::_change_multicast_group(IPAddress p_ip, String p_if_name, bool p_add) {
 	ERR_FAIL_COND_V(!is_open(), ERR_UNCONFIGURED);
 	ERR_FAIL_COND_V(!_can_use_ip(p_ip, false), ERR_INVALID_PARAMETER);
 
@@ -254,7 +254,7 @@ _FORCE_INLINE_ Error NetSocketPosix::_change_multicast_group(IP_Address p_ip, St
 	int level = type == IP::TYPE_IPV4 ? IPPROTO_IP : IPPROTO_IPV6;
 	int ret = -1;
 
-	IP_Address if_ip;
+	IPAddress if_ip;
 	uint32_t if_v6id = 0;
 	Map<String, IP::Interface_Info> if_info;
 	IP::get_singleton()->get_local_interfaces(&if_info);
@@ -269,7 +269,7 @@ _FORCE_INLINE_ Error NetSocketPosix::_change_multicast_group(IP_Address p_ip, St
 			break; // IPv6 uses index.
 		}
 
-		for (List<IP_Address>::Element *F = c.ip_addresses.front(); F; F = F->next()) {
+		for (List<IPAddress>::Element *F = c.ip_addresses.front(); F; F = F->next()) {
 			if (!F->get().is_ipv4()) {
 				continue; // Wrong IP type
 			}
@@ -283,13 +283,13 @@ _FORCE_INLINE_ Error NetSocketPosix::_change_multicast_group(IP_Address p_ip, St
 		ERR_FAIL_COND_V(!if_ip.is_valid(), ERR_INVALID_PARAMETER);
 		struct ip_mreq greq;
 		int sock_opt = p_add ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP;
-		copymem(&greq.imr_multiaddr, p_ip.get_ipv4(), 4);
-		copymem(&greq.imr_interface, if_ip.get_ipv4(), 4);
+		memcpy(&greq.imr_multiaddr, p_ip.get_ipv4(), 4);
+		memcpy(&greq.imr_interface, if_ip.get_ipv4(), 4);
 		ret = setsockopt(_sock, level, sock_opt, (const char *)&greq, sizeof(greq));
 	} else {
 		struct ipv6_mreq greq;
 		int sock_opt = p_add ? IPV6_ADD_MEMBERSHIP : IPV6_DROP_MEMBERSHIP;
-		copymem(&greq.ipv6mr_multiaddr, p_ip.get_ipv6(), 16);
+		memcpy(&greq.ipv6mr_multiaddr, p_ip.get_ipv6(), 16);
 		greq.ipv6mr_interface = if_v6id;
 		ret = setsockopt(_sock, level, sock_opt, (const char *)&greq, sizeof(greq));
 	}
@@ -395,7 +395,7 @@ void NetSocketPosix::close() {
 	_is_stream = false;
 }
 
-Error NetSocketPosix::bind(IP_Address p_addr, uint16_t p_port) {
+Error NetSocketPosix::bind(IPAddress p_addr, uint16_t p_port) {
 	ERR_FAIL_COND_V(!is_open(), ERR_UNCONFIGURED);
 	ERR_FAIL_COND_V(!_can_use_ip(p_addr, true), ERR_INVALID_PARAMETER);
 
@@ -425,7 +425,7 @@ Error NetSocketPosix::listen(int p_max_pending) {
 	return OK;
 }
 
-Error NetSocketPosix::connect_to_host(IP_Address p_host, uint16_t p_port) {
+Error NetSocketPosix::connect_to_host(IPAddress p_host, uint16_t p_port) {
 	ERR_FAIL_COND_V(!is_open(), ERR_UNCONFIGURED);
 	ERR_FAIL_COND_V(!_can_use_ip(p_host, false), ERR_INVALID_PARAMETER);
 
@@ -559,7 +559,7 @@ Error NetSocketPosix::recv(uint8_t *p_buffer, int p_len, int &r_read) {
 	return OK;
 }
 
-Error NetSocketPosix::recvfrom(uint8_t *p_buffer, int p_len, int &r_read, IP_Address &r_ip, uint16_t &r_port, bool p_peek) {
+Error NetSocketPosix::recvfrom(uint8_t *p_buffer, int p_len, int &r_read, IPAddress &r_ip, uint16_t &r_port, bool p_peek) {
 	ERR_FAIL_COND_V(!is_open(), ERR_UNCONFIGURED);
 
 	struct sockaddr_storage from;
@@ -616,7 +616,7 @@ Error NetSocketPosix::send(const uint8_t *p_buffer, int p_len, int &r_sent) {
 	return OK;
 }
 
-Error NetSocketPosix::sendto(const uint8_t *p_buffer, int p_len, int &r_sent, IP_Address p_ip, uint16_t p_port) {
+Error NetSocketPosix::sendto(const uint8_t *p_buffer, int p_len, int &r_sent, IPAddress p_ip, uint16_t p_port) {
 	ERR_FAIL_COND_V(!is_open(), ERR_UNCONFIGURED);
 
 	struct sockaddr_storage addr;
@@ -735,7 +735,7 @@ int NetSocketPosix::get_available_bytes() const {
 	return len;
 }
 
-Error NetSocketPosix::get_socket_address(IP_Address *r_ip, uint16_t *r_port) const {
+Error NetSocketPosix::get_socket_address(IPAddress *r_ip, uint16_t *r_port) const {
 	ERR_FAIL_COND_V(!is_open(), FAILED);
 
 	struct sockaddr_storage saddr;
@@ -749,7 +749,7 @@ Error NetSocketPosix::get_socket_address(IP_Address *r_ip, uint16_t *r_port) con
 	return OK;
 }
 
-Ref<NetSocket> NetSocketPosix::accept(IP_Address &r_ip, uint16_t &r_port) {
+Ref<NetSocket> NetSocketPosix::accept(IPAddress &r_ip, uint16_t &r_port) {
 	Ref<NetSocket> out;
 	ERR_FAIL_COND_V(!is_open(), out);
 
@@ -770,11 +770,11 @@ Ref<NetSocket> NetSocketPosix::accept(IP_Address &r_ip, uint16_t &r_port) {
 	return Ref<NetSocket>(ns);
 }
 
-Error NetSocketPosix::join_multicast_group(const IP_Address &p_multi_address, String p_if_name) {
+Error NetSocketPosix::join_multicast_group(const IPAddress &p_multi_address, String p_if_name) {
 	return _change_multicast_group(p_multi_address, p_if_name, true);
 }
 
-Error NetSocketPosix::leave_multicast_group(const IP_Address &p_multi_address, String p_if_name) {
+Error NetSocketPosix::leave_multicast_group(const IPAddress &p_multi_address, String p_if_name) {
 	return _change_multicast_group(p_multi_address, p_if_name, false);
 }
 #endif

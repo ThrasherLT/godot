@@ -1427,6 +1427,9 @@ void RendererSceneCull::_update_instance(Instance *p_instance) {
 		pair.pair_mask |= 1 << RS::INSTANCE_LIGHT;
 		pair.pair_mask |= 1 << RS::INSTANCE_GI_PROBE;
 		pair.pair_mask |= 1 << RS::INSTANCE_LIGHTMAP;
+		if (p_instance->base_type == RS::INSTANCE_PARTICLES) {
+			pair.pair_mask |= 1 << RS::INSTANCE_PARTICLES_COLLISION;
+		}
 
 		pair.pair_mask |= geometry_instance_pair_mask;
 
@@ -2391,7 +2394,7 @@ void RendererSceneCull::_frustum_cull(CullData &cull_data, FrustumCullResult &cu
 				cull_result.gi_probes.push_back(RID::from_uint64(idata.instance_data_rid));
 
 			} else if (base_type == RS::INSTANCE_LIGHTMAP) {
-				cull_result.gi_probes.push_back(RID::from_uint64(idata.instance_data_rid));
+				cull_result.lightmaps.push_back(RID::from_uint64(idata.instance_data_rid));
 			} else if (((1 << base_type) & RS::INSTANCE_GEOMETRY_MASK) && !(idata.flags & InstanceData::FLAG_CAST_SHADOWS_ONLY)) {
 				bool keep = true;
 
@@ -2410,7 +2413,7 @@ void RendererSceneCull::_frustum_cull(CullData &cull_data, FrustumCullResult &cu
 						cull_data.cull->lock.lock();
 						RSG::storage->particles_request_process(idata.base_rid);
 						cull_data.cull->lock.unlock();
-						RSG::storage->particles_set_view_axis(idata.base_rid, -cull_data.cam_transform.basis.get_axis(2).normalized());
+						RSG::storage->particles_set_view_axis(idata.base_rid, -cull_data.cam_transform.basis.get_axis(2).normalized(), cull_data.cam_transform.basis.get_axis(1).normalized());
 						//particles visible? request redraw
 						RenderingServerDefault::redraw_request();
 					}
@@ -2450,18 +2453,19 @@ void RendererSceneCull::_frustum_cull(CullData &cull_data, FrustumCullResult &cu
 				}
 
 				if (geometry_instance_pair_mask & (1 << RS::INSTANCE_DECAL) && (idata.flags & InstanceData::FLAG_GEOM_DECAL_DIRTY)) {
-					//InstanceGeometryData *geom = static_cast<InstanceGeometryData *>(idata.instance->base_data);
-					//todo for GLES3
-					idata.flags &= ~uint32_t(InstanceData::FLAG_GEOM_DECAL_DIRTY);
-					/*for (Set<Instance *>::Element *E = geom->dec.front(); E; E = E->next()) {
-					InstanceReflectionProbeData *reflection_probe = static_cast<InstanceReflectionProbeData *>(E->get()->base_data);
+					InstanceGeometryData *geom = static_cast<InstanceGeometryData *>(idata.instance->base_data);
+					uint32_t idx = 0;
 
-					instance_pair_buffer[idx++] = reflection_probe->instance;
-					if (idx==MAX_INSTANCE_PAIRS) {
-						break;
+					for (Set<Instance *>::Element *E = geom->decals.front(); E; E = E->next()) {
+						InstanceDecalData *decal = static_cast<InstanceDecalData *>(E->get()->base_data);
+
+						instance_pair_buffer[idx++] = decal->instance;
+						if (idx == MAX_INSTANCE_PAIRS) {
+							break;
+						}
 					}
-				}*/
-					//scene_render->geometry_instance_pair_decal_instances(geom->geometry_instance, light_instances, idx);
+					scene_render->geometry_instance_pair_decal_instances(geom->geometry_instance, instance_pair_buffer, idx);
+					idata.flags &= ~uint32_t(InstanceData::FLAG_GEOM_DECAL_DIRTY);
 				}
 
 				if (idata.flags & InstanceData::FLAG_GEOM_GI_PROBE_DIRTY) {
