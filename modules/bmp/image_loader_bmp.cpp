@@ -37,11 +37,11 @@ Error ImageLoaderBMP::convert_to_image(Ref<Image> p_image,
 		const uint8_t *p_color_buffer,
 		const uint32_t color_table_size,
 		const bmp_header_s &p_header) {
-
 	Error err = OK;
 
-	if (p_buffer == NULL)
+	if (p_buffer == nullptr) {
 		err = FAILED;
+	}
 
 	if (err == OK) {
 		size_t index = 0;
@@ -156,9 +156,9 @@ Error ImageLoaderBMP::convert_to_image(Ref<Image> p_image,
 			line -= line_width;
 		}
 
-		if (p_color_buffer == NULL || color_table_size == 0) { // regular pixels
+		if (p_color_buffer == nullptr || color_table_size == 0) { // regular pixels
 
-			p_image->create(width, height, 0, Image::FORMAT_RGBA8, data);
+			p_image->create(width, height, false, Image::FORMAT_RGBA8, data);
 
 		} else { // data is in indexed format, extend it
 
@@ -198,7 +198,7 @@ Error ImageLoaderBMP::convert_to_image(Ref<Image> p_image,
 
 				dest += 4;
 			}
-			p_image->create(width, height, 0, Image::FORMAT_RGBA8, extended_data);
+			p_image->create(width, height, false, Image::FORMAT_RGBA8, extended_data);
 		}
 	}
 	return err;
@@ -206,7 +206,6 @@ Error ImageLoaderBMP::convert_to_image(Ref<Image> p_image,
 
 Error ImageLoaderBMP::load_image(Ref<Image> p_image, FileAccess *f,
 		bool p_force_linear, float p_scale) {
-
 	bmp_header_s bmp_header;
 	Error err = ERR_INVALID_DATA;
 

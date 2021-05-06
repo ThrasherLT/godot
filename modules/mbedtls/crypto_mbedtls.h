@@ -41,7 +41,6 @@
 class CryptoMbedTLS;
 class SSLContextMbedTLS;
 class CryptoKeyMbedTLS : public CryptoKey {
-
 private:
 	mbedtls_pk_context pkey;
 	int locks = 0;
@@ -50,7 +49,7 @@ private:
 public:
 	static CryptoKey *create();
 	static void make_default() { CryptoKey::_create = create; }
-	static void finalize() { CryptoKey::_create = NULL; }
+	static void finalize() { CryptoKey::_create = nullptr; }
 
 	virtual Error load(String p_path, bool p_public_only);
 	virtual Error save(String p_path, bool p_public_only);
@@ -74,7 +73,6 @@ public:
 };
 
 class X509CertificateMbedTLS : public X509Certificate {
-
 private:
 	mbedtls_x509_crt cert;
 	int locks;
@@ -82,7 +80,7 @@ private:
 public:
 	static X509Certificate *create();
 	static void make_default() { X509Certificate::_create = create; }
-	static void finalize() { X509Certificate::_create = NULL; }
+	static void finalize() { X509Certificate::_create = nullptr; }
 
 	virtual Error load(String p_path);
 	virtual Error load_from_memory(const uint8_t *p_buffer, int p_len);
@@ -104,7 +102,6 @@ public:
 };
 
 class CryptoMbedTLS : public Crypto {
-
 private:
 	mbedtls_entropy_context entropy;
 	mbedtls_ctr_drbg_context ctr_drbg;

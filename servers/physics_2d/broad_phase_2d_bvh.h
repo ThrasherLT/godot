@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  copymem.h                                                            */
+/*  broad_phase_2d_bvh.h                                                 */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,23 +28,46 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#ifndef COPYMEM_H
-#define COPYMEM_H
+#ifndef BROAD_PHASE_2D_BVH_H
+#define BROAD_PHASE_2D_BVH_H
 
-#include "core/typedefs.h"
+#include "broad_phase_2d_sw.h"
+#include "core/math/bvh.h"
+#include "core/math/rect2.h"
+#include "core/math/vector2.h"
 
-#ifdef PLATFORM_COPYMEM
+class BroadPhase2DBVH : public BroadPhase2DSW {
+	BVH_Manager<CollisionObject2DSW, true, 128, Rect2, Vector2> bvh;
 
-#include "platform_copymem.h" // included from platform/<current_platform>/platform_copymem.h"
+	static void *_pair_callback(void *, uint32_t, CollisionObject2DSW *, int, uint32_t, CollisionObject2DSW *, int);
+	static void _unpair_callback(void *, uint32_t, CollisionObject2DSW *, int, uint32_t, CollisionObject2DSW *, int, void *);
 
-#else
+	PairCallback pair_callback;
+	void *pair_userdata;
+	UnpairCallback unpair_callback;
+	void *unpair_userdata;
 
-#include <string.h>
+public:
+	// 0 is an invalid ID
+	virtual ID create(CollisionObject2DSW *p_object, int p_subindex = 0, const Rect2 &p_aabb = Rect2(), bool p_static = false);
+	virtual void move(ID p_id, const Rect2 &p_aabb);
+	virtual void set_static(ID p_id, bool p_static);
+	virtual void remove(ID p_id);
 
-#define copymem(to, from, count) memcpy(to, from, count)
-#define zeromem(to, count) memset(to, 0, count)
-#define movemem(to, from, count) memmove(to, from, count)
+	virtual CollisionObject2DSW *get_object(ID p_id) const;
+	virtual bool is_static(ID p_id) const;
+	virtual int get_subindex(ID p_id) const;
 
-#endif
+	virtual int cull_segment(const Vector2 &p_from, const Vector2 &p_to, CollisionObject2DSW **p_results, int p_max_results, int *p_result_indices = nullptr);
+	virtual int cull_aabb(const Rect2 &p_aabb, CollisionObject2DSW **p_results, int p_max_results, int *p_result_indices = nullptr);
 
-#endif
+	virtual void set_pair_callback(PairCallback p_pair_callback, void *p_userdata);
+	virtual void set_unpair_callback(UnpairCallback p_unpair_callback, void *p_userdata);
+
+	virtual void update();
+
+	static BroadPhase2DSW *_create();
+	BroadPhase2DBVH();
+};
+
+#endif // BROAD_PHASE_2D_BVH_H

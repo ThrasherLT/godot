@@ -85,7 +85,6 @@ private:
 	};
 
 	struct TrackNodeCache {
-
 		NodePath path;
 		uint32_t id;
 		RES resource;
@@ -108,7 +107,6 @@ private:
 		bool animation_playing;
 
 		struct PropertyAnim {
-
 			TrackNodeCache *owner;
 			SpecialProperty special; //small optimization
 			Vector<StringName> subpath;
@@ -118,16 +116,15 @@ private:
 			Variant capture;
 
 			PropertyAnim() :
-					owner(NULL),
+					owner(nullptr),
 					special(SP_NONE),
-					object(NULL),
+					object(nullptr),
 					accum_pass(0) {}
 		};
 
 		Map<StringName, PropertyAnim> property_anim;
 
 		struct BezierAnim {
-
 			Vector<StringName> bezier_property;
 			TrackNodeCache *owner;
 			float bezier_accum;
@@ -135,9 +132,9 @@ private:
 			uint64_t accum_pass;
 
 			BezierAnim() :
-					owner(NULL),
+					owner(nullptr),
 					bezier_accum(0.0),
-					object(NULL),
+					object(nullptr),
 					accum_pass(0) {}
 		};
 
@@ -145,10 +142,10 @@ private:
 
 		TrackNodeCache() :
 				id(0),
-				node(NULL),
-				spatial(NULL),
-				node_2d(NULL),
-				skeleton(NULL),
+				node(nullptr),
+				spatial(nullptr),
+				node_2d(nullptr),
+				skeleton(nullptr),
 				bone_idx(-1),
 				accum_pass(0),
 				audio_playing(false),
@@ -158,18 +155,17 @@ private:
 	};
 
 	struct TrackNodeCacheKey {
-
 		uint32_t id;
 		int bone_idx;
 
 		inline bool operator<(const TrackNodeCacheKey &p_right) const {
-
-			if (id < p_right.id)
+			if (id < p_right.id) {
 				return true;
-			else if (id > p_right.id)
+			} else if (id > p_right.id) {
 				return false;
-			else
+			} else {
 				return bone_idx < p_right.bone_idx;
+			}
 		}
 	};
 
@@ -196,7 +192,6 @@ private:
 
 	Map<StringName, AnimationData> animation_set;
 	struct BlendKey {
-
 		StringName from;
 		StringName to;
 		bool operator<(const BlendKey &bk) const { return from == bk.from ? String(to) < String(bk.to) : String(from) < String(bk.from); }
@@ -205,35 +200,30 @@ private:
 	Map<BlendKey, float> blend_times;
 
 	struct PlaybackData {
-
 		AnimationData *from;
 		float pos;
 		float speed_scale;
 
 		PlaybackData() {
-
 			pos = 0;
 			speed_scale = 1.0;
-			from = NULL;
+			from = nullptr;
 		}
 	};
 
 	struct Blend {
-
 		PlaybackData data;
 
 		float blend_time;
 		float blend_left;
 
 		Blend() {
-
 			blend_left = 0;
 			blend_time = 0;
 		}
 	};
 
 	struct Playback {
-
 		List<Blend> blend;
 		PlaybackData current;
 		StringName assigned;
@@ -267,12 +257,10 @@ private:
 
 	// bind helpers
 	PoolVector<String> _get_animation_list() const {
-
 		List<StringName> animations;
 		get_animation_list(&animations);
 		PoolVector<String> ret;
 		while (animations.size()) {
-
 			ret.push_back(animations.front()->get());
 			animations.pop_front();
 		}
